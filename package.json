@@ -1,0 +1,42 @@
+{
+  "name": "ai-personal-assistant",
+  "private": true,
+  "packageManager": "npm@11.11.0",
+  "workspaces": [
+    "apps/*",
+    "packages/*"
+  ],
+  "scripts": {
+    "build": "turbo build",
+    "dev": "turbo dev",
+    "lint": "turbo lint",
+    "format": "prettier --write \"**/*.{ts,tsx,md}\"",
+    "test": "turbo test"
+  },
+  "devDependencies": {
+    "prettier": "^3.0.0",
+    "turbo": "latest",
+    "typescript": "^5.0.0"
+  },
+  "dependencies": {
+    "@nestjs/bullmq": "^11.0.4",
+    "@nestjs/config": "^4.0.4",
+    "@nestjs/passport": "^11.0.5",
+    "@nestjs/throttler": "^6.5.0",
+    "@supabase/supabase-js": "^2.104.0",
+    "@types/bcrypt": "^6.0.0",
+    "@types/cookie-parser": "^1.4.10",
+    "@types/joi": "^17.2.2",
+    "@types/multer": "^2.1.0",
+    "@types/passport-jwt": "^4.0.1",
+    "bcrypt": "^6.0.0",
+    "bullmq": "^5.75.2",
+    "chrono-node": "^2.9.0",
+    "cookie-parser": "^1.4.7",
+    "idb": "^8.0.3",
+    "ioredis": "^5.10.1",
+    "joi": "^18.1.2",
+    "passport": "^0.7.0",
+    "passport-jwt": "^4.0.1"
+  }
+}
