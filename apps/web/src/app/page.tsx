@@ -1,6 +1,3 @@
-"use client"
-
-import React from 'react';
 import { TodayView } from '@/components/dashboard/today-view';
 import { WeeklyCalendar } from '@/components/dashboard/weekly-calendar';
 import { GoalPanel } from '@/components/dashboard/goal-panel';
@@ -15,14 +12,19 @@ import {
   Search,
   Plus,
   Zap,
-  Clock
+  Clock,
+  Briefcase,
+  Coffee,
+  Target
 } from 'lucide-react';
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 import { cn } from '@/components/ui/button';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
+import React from 'react';
 
 export default function DashboardPage() {
   const [activeTab, setActiveTab] = React.useState('Dashboard');
+  const [activeMode, setActiveMode] = React.useState('work');
 
   const mockData = {
     meetings: [
@@ -41,6 +43,41 @@ export default function DashboardPage() {
   };
 
   const allItems = [...mockData.meetings, ...mockData.tasks];
+
+  const modes = [
+    { id: 'work', label: 'Work', icon: <Briefcase size={14} />, color: 'text-blue-500' },
+    { id: 'personal', label: 'Personal', icon: <Coffee size={14} />, color: 'text-orange-500' },
+    { id: 'focus', label: 'Focus', icon: <Target size={14} />, color: 'text-purple-500' },
+  ];
+
+  if (activeMode === 'focus') {
+    return (
+      <div className="h-screen bg-slate-950 flex flex-col items-center justify-center text-white font-sans">
+        <motion.div
+          initial={{ scale: 0.9, opacity: 0 }}
+          animate={{ scale: 1, opacity: 1 }}
+          className="text-center space-y-8"
+        >
+          <div className="w-24 h-24 bg-primary/20 rounded-full flex items-center justify-center mx-auto border-4 border-primary/30 animate-pulse">
+            <Target size={40} className="text-primary" />
+          </div>
+          <div className="space-y-2">
+            <h1 className="text-5xl font-black tracking-tighter">Focusing</h1>
+            <p className="text-slate-400 font-medium">Currently working on: <span className="text-white">Draft Project Proposal</span></p>
+          </div>
+          <div className="text-7xl font-mono font-bold tracking-widest text-primary">
+            24:59
+          </div>
+          <button
+            onClick={() => setActiveMode('work')}
+            className="px-8 py-3 bg-white/5 hover:bg-white/10 border border-white/10 rounded-2xl font-bold text-sm transition-all"
+          >
+            End Focus Session
+          </button>
+        </motion.div>
+      </div>
+    );
+  }
 
   return (
     <div className="flex h-screen bg-[#F8F9FB] text-[#1A1C1E] font-sans selection:bg-primary/10 selection:text-primary">
@@ -79,13 +116,32 @@ export default function DashboardPage() {
       {/* Main Content */}
       <main className="flex-1 flex flex-col overflow-hidden relative">
         <header className="h-20 bg-white/80 backdrop-blur-md border-b px-8 flex justify-between items-center shrink-0 z-10">
-           <div className="relative w-96 group">
-              <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 w-4 h-4 group-focus-within:text-primary transition-colors" />
-              <input
-                type="text"
-                placeholder="Search anything..."
-                className="w-full bg-[#F1F3F5] border-transparent border focus:border-primary/20 focus:bg-white rounded-2xl py-2.5 pl-11 pr-4 text-sm focus:outline-none focus:ring-4 focus:ring-primary/5 transition-all"
-              />
+           <div className="flex items-center gap-8">
+              <div className="relative w-72 group">
+                <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 w-4 h-4 group-focus-within:text-primary transition-colors" />
+                <input
+                  type="text"
+                  placeholder="Search anything..."
+                  className="w-full bg-[#F1F3F5] border-transparent border focus:border-primary/20 focus:bg-white rounded-2xl py-2 pl-11 pr-4 text-sm focus:outline-none focus:ring-4 focus:ring-primary/5 transition-all"
+                />
+              </div>
+
+              {/* Mode Switcher (Step 16) */}
+              <div className="flex bg-slate-100 p-1 rounded-2xl">
+                 {modes.map(mode => (
+                    <button
+                      key={mode.id}
+                      onClick={() => setActiveMode(mode.id)}
+                      className={cn(
+                        "px-4 py-1.5 rounded-xl text-xs font-bold flex items-center gap-2 transition-all",
+                        activeMode === mode.id ? "bg-white text-slate-900 shadow-sm" : "text-slate-400 hover:text-slate-600"
+                      )}
+                    >
+                      <span className={activeMode === mode.id ? mode.color : ""}>{mode.icon}</span>
+                      {mode.label}
+                    </button>
+                 ))}
+              </div>
            </div>
 
            <div className="flex items-center gap-6">
@@ -114,19 +170,30 @@ export default function DashboardPage() {
                 animate={{ opacity: 1, x: 0 }}
                 transition={{ duration: 0.6, ease: "easeOut" }}
               >
-                <h2 className="text-4xl font-black tracking-tight text-slate-900 mb-2">Dashboard</h2>
+                <h2 className="text-4xl font-black tracking-tight text-slate-900 mb-2">
+                  {activeMode === 'work' ? 'Productivity Dashboard' : 'Personal Space'}
+                </h2>
                 <p className="text-slate-500 font-medium text-lg">
                   Welcome back! You have <span className="text-primary font-bold">3 tasks</span> to focus on today.
                 </p>
               </motion.div>
 
-              <motion.button
-                whileHover={{ scale: 1.02 }}
-                whileTap={{ scale: 0.98 }}
-                className="bg-primary text-white px-6 py-3 rounded-2xl font-bold text-sm shadow-xl shadow-primary/25 flex items-center gap-2 hover:bg-primary/90 transition-all"
-              >
-                <Plus size={18} strokeWidth={3} /> Create New Task
-              </motion.button>
+              <div className="flex gap-4">
+                <motion.button
+                  whileHover={{ scale: 1.02 }}
+                  whileTap={{ scale: 0.98 }}
+                  className="bg-white text-slate-900 border border-slate-200 px-6 py-3 rounded-2xl font-bold text-sm shadow-sm flex items-center gap-2 hover:bg-slate-50 transition-all"
+                >
+                  <Calendar size={18} className="text-slate-400" /> View Calendar
+                </motion.button>
+                <motion.button
+                  whileHover={{ scale: 1.02 }}
+                  whileTap={{ scale: 0.98 }}
+                  className="bg-primary text-white px-6 py-3 rounded-2xl font-bold text-sm shadow-xl shadow-primary/25 flex items-center gap-2 hover:bg-primary/90 transition-all"
+                >
+                  <Plus size={18} strokeWidth={3} /> Create New Task
+                </motion.button>
+              </div>
             </header>
 
             <div className="grid grid-cols-1 lg:grid-cols-12 gap-10">
@@ -151,7 +218,10 @@ export default function DashboardPage() {
                       Ready for some deep work? Start a 25-minute pomodoro session.
                     </p>
                     <div className="flex gap-3">
-                      <button className="flex-1 bg-primary text-white py-3.5 rounded-2xl text-sm font-bold hover:bg-primary/90 transition-all shadow-lg shadow-primary/20">
+                      <button
+                        onClick={() => setActiveMode('focus')}
+                        className="flex-1 bg-primary text-white py-3.5 rounded-2xl text-sm font-bold hover:bg-primary/90 transition-all shadow-lg shadow-primary/20"
+                      >
                         Start Session
                       </button>
                       <button className="w-12 h-12 flex items-center justify-center bg-white/10 rounded-2xl hover:bg-white/20 transition-all">

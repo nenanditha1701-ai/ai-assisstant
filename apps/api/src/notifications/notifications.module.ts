@@ -2,6 +2,7 @@ import { Module } from '@nestjs/common';
 import { BullModule } from '@nestjs/bullmq';
 import { NotificationPreferencesService } from './notification-preferences.service';
 import { NotificationPreferencesController } from './notification-preferences.controller';
+import { NotificationsProcessor } from './notifications.processor';
 import { AuthModule } from '../auth/auth.module';
 
 @Module({
@@ -11,7 +12,7 @@ import { AuthModule } from '../auth/auth.module';
       name: 'notifications',
     }),
   ],
-  providers: [NotificationPreferencesService],
+  providers: [NotificationPreferencesService, NotificationsProcessor],
   controllers: [NotificationPreferencesController],
   exports: [NotificationPreferencesService],
 })

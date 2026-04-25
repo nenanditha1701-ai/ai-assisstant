@@ -2,6 +2,7 @@ import { Module, MiddlewareConsumer, NestModule } from '@nestjs/common';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { ThrottlerModule } from '@nestjs/throttler';
 import { BullModule } from '@nestjs/bullmq';
+import { ScheduleModule } from '@nestjs/schedule';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { AuthMiddleware } from './common/middleware/auth.middleware';
@@ -12,6 +13,9 @@ import { RoutinesModule } from './routines/routines.module';
 import { CalendarModule } from './calendar/calendar.module';
 import { TasksModule } from './tasks/tasks.module';
 import { MeetingsModule } from './meetings/meetings.module';
+import { SchedulingModule } from './scheduling/scheduling.module';
+import { ModesModule } from './modes/modes.module';
+import { IntelligenceModule } from './intelligence/intelligence.module';
 
 @Module({
   imports: [
@@ -32,6 +36,7 @@ import { MeetingsModule } from './meetings/meetings.module';
       }),
       inject: [ConfigService],
     }),
+    ScheduleModule.forRoot(),
     AuthModule,
     ProfilesModule,
     NotificationsModule,
@@ -39,6 +44,9 @@ import { MeetingsModule } from './meetings/meetings.module';
     CalendarModule,
     TasksModule,
     MeetingsModule,
+    SchedulingModule,
+    ModesModule,
+    IntelligenceModule,
   ],
   controllers: [AppController],
   providers: [AppService],
