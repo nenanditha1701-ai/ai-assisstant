@@ -8,9 +8,10 @@ import { SchedulingController } from './scheduling.controller';
 import { AuthModule } from '../auth/auth.module';
 import { AnalyticsModule } from '../analytics/analytics.module';
 import { IntelligenceModule } from '../intelligence/intelligence.module';
+import { LifeEventsModule } from '../life-events/life-events.module';
 
 @Module({
-  imports: [AuthModule, AnalyticsModule, IntelligenceModule],
+  imports: [AuthModule, AnalyticsModule, IntelligenceModule, LifeEventsModule],
   providers: [
     SchedulingService,
     OverloadService,

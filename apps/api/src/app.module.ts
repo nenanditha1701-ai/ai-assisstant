@@ -21,6 +21,10 @@ import { IntelligenceModule } from './intelligence/intelligence.module';
 import { AnalyticsModule } from './analytics/analytics.module';
 import { GoalsModule } from './goals/goals.module';
 import { WorkspacesModule } from './workspaces/workspaces.module';
+import { LifeEventsModule } from './life-events/life-events.module';
+import { FinancesModule } from './finances/finances.module';
+import { TravelModule } from './travel/travel.module';
+import { GraphModule } from './graph/graph.module';
 
 @Module({
   imports: [
@@ -31,7 +35,9 @@ import { WorkspacesModule } from './workspaces/workspaces.module';
       ttl: 60,
       limit: 10,
     }]),
-    EventEmitterModule.forRoot(),
+    EventEmitterModule.forRoot({
+      wildcard: true, // Required for system event logger
+    }),
     BullModule.forRootAsync({
       imports: [ConfigModule],
       useFactory: async (configService: ConfigService) => ({
@@ -57,6 +63,10 @@ import { WorkspacesModule } from './workspaces/workspaces.module';
     AnalyticsModule,
     GoalsModule,
     WorkspacesModule,
+    LifeEventsModule,
+    FinancesModule,
+    TravelModule,
+    GraphModule,
   ],
   controllers: [AppController],
   providers: [AppService],
