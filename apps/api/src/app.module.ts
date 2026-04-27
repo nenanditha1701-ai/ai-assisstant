@@ -25,6 +25,10 @@ import { LifeEventsModule } from './life-events/life-events.module';
 import { FinancesModule } from './finances/finances.module';
 import { TravelModule } from './travel/travel.module';
 import { GraphModule } from './graph/graph.module';
+import { AutonomousPlanningModule } from './autonomous-planning/autonomous-planning.module';
+import { BehavioralModelingModule } from './behavioral-modeling/behavioral-modeling.module';
+import { AutonomyModule } from './autonomy/autonomy.module';
+import { DecisionSupportModule } from './decision-support/decision-support.module';
 
 @Module({
   imports: [
@@ -36,7 +40,7 @@ import { GraphModule } from './graph/graph.module';
       limit: 10,
     }]),
     EventEmitterModule.forRoot({
-      wildcard: true, // Required for system event logger
+      wildcard: true,
     }),
     BullModule.forRootAsync({
       imports: [ConfigModule],
@@ -67,6 +71,10 @@ import { GraphModule } from './graph/graph.module';
     FinancesModule,
     TravelModule,
     GraphModule,
+    AutonomousPlanningModule,
+    BehavioralModelingModule,
+    AutonomyModule,
+    DecisionSupportModule,
   ],
   controllers: [AppController],
   providers: [AppService],
