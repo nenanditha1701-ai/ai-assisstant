@@ -3,10 +3,12 @@ import { ConfigModule, ConfigService } from '@nestjs/config';
 import { ThrottlerModule } from '@nestjs/throttler';
 import { BullModule } from '@nestjs/bullmq';
 import { ScheduleModule } from '@nestjs/schedule';
+import { EventEmitterModule } from '@nestjs/event-emitter';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { AuthMiddleware } from './common/middleware/auth.middleware';
 import { AuthModule } from './auth/auth.module';
+import { CommonModule } from './common/common.module';
 import { ProfilesModule } from './profiles/profiles.module';
 import { NotificationsModule } from './notifications/notifications.module';
 import { RoutinesModule } from './routines/routines.module';
@@ -16,6 +18,9 @@ import { MeetingsModule } from './meetings/meetings.module';
 import { SchedulingModule } from './scheduling/scheduling.module';
 import { ModesModule } from './modes/modes.module';
 import { IntelligenceModule } from './intelligence/intelligence.module';
+import { AnalyticsModule } from './analytics/analytics.module';
+import { GoalsModule } from './goals/goals.module';
+import { WorkspacesModule } from './workspaces/workspaces.module';
 
 @Module({
   imports: [
@@ -26,6 +31,7 @@ import { IntelligenceModule } from './intelligence/intelligence.module';
       ttl: 60,
       limit: 10,
     }]),
+    EventEmitterModule.forRoot(),
     BullModule.forRootAsync({
       imports: [ConfigModule],
       useFactory: async (configService: ConfigService) => ({
@@ -38,6 +44,7 @@ import { IntelligenceModule } from './intelligence/intelligence.module';
     }),
     ScheduleModule.forRoot(),
     AuthModule,
+    CommonModule,
     ProfilesModule,
     NotificationsModule,
     RoutinesModule,
@@ -47,6 +54,9 @@ import { IntelligenceModule } from './intelligence/intelligence.module';
     SchedulingModule,
     ModesModule,
     IntelligenceModule,
+    AnalyticsModule,
+    GoalsModule,
+    WorkspacesModule,
   ],
   controllers: [AppController],
   providers: [AppService],

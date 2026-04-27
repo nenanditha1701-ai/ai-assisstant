@@ -1,50 +1,45 @@
 import { Processor, WorkerHost } from '@nestjs/bullmq';
 import { Job } from 'bullmq';
-import { Injectable } from '@nestjs/common';
 import { SupabaseService } from '../auth/supabase.service';
-import { NotificationPreferencesService } from './notification-preferences.service';
+import { ContextStateService } from '../common/services/context-state.service';
 
 @Processor('notifications')
-@Injectable()
 export class NotificationsProcessor extends WorkerHost {
   constructor(
     private supabase: SupabaseService,
-    private prefsService: NotificationPreferencesService
+    private contextState: ContextStateService
   ) {
     super();
   }
 
   async process(job: Job<any, any, string>): Promise<any> {
-    const { userId, eventType, content, urgency } = job.data;
-    const adminClient = this.supabase.getAdminClient();
+    const { userId, type, content, urgency } = job.data;
 
-    // 1. Get Preferences
-    const prefs = await this.prefsService.getPreferences(userId);
+    // Step 37 Integration: Apply contextual filters
+    const context = await this.contextState.getContextState(userId);
 
-    // 2. Filter by Quiet Hours and Enabled Channels
-    const now = new Date();
-    const timeStr = now.toTimeString().split(' ')[0];
-    const isQuietHours = timeStr >= prefs.quiet_hours_start || timeStr <= prefs.quiet_hours_end;
-
-    if (isQuietHours && urgency !== 'Critical') {
-       console.log(`Notification suppressed for user ${userId} due to quiet hours.`);
-       return { status: 'suppressed', reason: 'quiet_hours' };
+    // Filter logic:
+    // If in-meeting or high-stress, only allow 'critical' urgency
+    if (context.calendarState === 'in-meeting' || context.stressLevel === 'high') {
+      if (urgency !== 'critical') {
+        console.log(`Suppressed non-critical notification (${type}) for user ${userId} due to ${context.calendarState}/${context.stressLevel} context`);
+        return { status: 'suppressed' };
+      }
     }
 
-    // 3. Dispatch to enabled channels (Simplified for Phase 2)
-    for (const channel of prefs.enabled_channels) {
-       console.log(`Dispatching ${eventType} via ${channel} to user ${userId}: ${content}`);
+    // Logic for sending (SendGrid/FCM etc.) would go here
+    console.log(`Dispatching ${type} notification to user ${userId}`);
 
-       // Log delivery attempt
-       await adminClient.from('notifications').insert({
-         user_id: userId,
-         event_type: eventType,
-         channel: channel,
-         status: 'sent',
-         delivery_log: { job_id: job.id, urgency }
-       });
-    }
+    await this.supabase.getAdminClient()
+      .from('notifications')
+      .insert({
+        user_id: userId,
+        type,
+        content,
+        status: 'sent',
+        metadata: { context }
+      });
 
-    return { status: 'success' };
+    return { status: 'sent' };
   }
 }

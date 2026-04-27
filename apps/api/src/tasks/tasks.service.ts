@@ -1,6 +1,9 @@
 import { Injectable, BadRequestException } from '@nestjs/common';
+import { EventEmitter2 } from '@nestjs/event-emitter';
 import { SupabaseService } from '../auth/supabase.service';
 import { AuditService } from '../auth/audit.service';
+import { BehavioralAnalysisService } from '../analytics/behavioral-analysis.service';
+import { SystemEvents } from '../common/events/system-events';
 import * as chrono from 'chrono-node';
 
 @Injectable()
@@ -8,6 +11,8 @@ export class TasksService {
   constructor(
     private supabase: SupabaseService,
     private audit: AuditService,
+    private behavioral: BehavioralAnalysisService,
+    private eventEmitter: EventEmitter2,
   ) {}
 
   async getTasks(userId: string, filters: any = {}) {
@@ -36,7 +41,11 @@ export class TasksService {
 
     if (error) throw error;
 
-    await this.audit.logEvent(userId, 'tasks', data.id, 'create', null, data);
+    await this.audit.logEvent(userId, 'tasks', data.id, 'create', null, finalData);
+    await this.behavioral.logEvent(userId, 'task_created', 'task', data.id, { title: data.title });
+
+    this.eventEmitter.emit(SystemEvents.TASK_CREATED, { userId, task: data });
+
     return data;
   }
 
@@ -57,7 +66,23 @@ export class TasksService {
     if (error) throw error;
 
     await this.audit.logEvent(userId, 'tasks', taskId, 'update', oldData, data);
+
+    if (updateData.status === 'completed') {
+      await this.behavioral.logEvent(userId, 'task_completed', 'task', taskId, {
+        delay: this.calculateDelay(data.deadline, new Date()),
+      });
+      this.eventEmitter.emit(SystemEvents.TASK_COMPLETED, { userId, taskId, task: data });
+    } else {
+      this.eventEmitter.emit(SystemEvents.TASK_STATUS_CHANGED, { userId, taskId, status: updateData.status });
+    }
+
     return data;
+  }
+
+  private calculateDelay(deadline: string, completedAt: Date) {
+    if (!deadline) return 0;
+    const diff = completedAt.getTime() - new Date(deadline).getTime();
+    return Math.max(0, diff / (1000 * 60));
   }
 
   async softDeleteTask(userId: string, taskId: string) {
@@ -81,14 +106,10 @@ export class TasksService {
 
   private parseTaskText(text: string) {
     const parsed: any = {};
-
-    // Use chrono-node for natural language date parsing
     const results = chrono.parse(text);
     if (results.length > 0) {
       parsed.deadline = results[0].start.date();
     }
-
-    // Improved Duration parsing (e.g., "1h 30m", "45 mins")
     const durationRegex = /(?:(\d+)\s*h(?:ours?)?)?\s*(?:(\d+)\s*m(?:in(?:utes?)?)?)?/i;
     const match = text.match(durationRegex);
     if (match && (match[1] || match[2])) {
@@ -98,20 +119,28 @@ export class TasksService {
         parsed.estimated_duration = hours * 60 + mins;
       }
     }
-
     return parsed;
   }
 
   private async checkCircularDependency(taskId: string, dependsOnId: string): Promise<boolean> {
-    if (taskId === dependsOnId) return true;
+    const visited = new Set<string>();
+    const stack = [dependsOnId];
 
-    const { data } = await this.supabase.getClient()
-      .from('task_dependencies')
-      .select('task_id')
-      .eq('task_id', dependsOnId)
-      .eq('depends_on_task_id', taskId);
+    while (stack.length > 0) {
+      const current = stack.pop()!;
+      if (current === taskId) return true;
+      if (visited.has(current)) continue;
+      visited.add(current);
 
-    if (data && data.length > 0) return true;
+      const { data } = await this.supabase.getClient()
+        .from('task_dependencies')
+        .select('depends_on_task_id')
+        .eq('task_id', current);
+
+      if (data) {
+        stack.push(...data.map(d => d.depends_on_task_id));
+      }
+    }
     return false;
   }
 }

@@ -1,13 +1,21 @@
-import { Controller, Post, Req, Get, Param } from '@nestjs/common';
+import { Controller, Get, Post, Req, UseGuards } from '@nestjs/common';
 import { DailyBriefingService } from './daily-briefing.service';
-import { Request } from 'express';
+import { ContextStateService } from '../common/services/context-state.service';
 
-@Controller('intelligence/briefing')
+@Controller('intelligence')
 export class DailyBriefingController {
-  constructor(private briefingService: DailyBriefingService) {}
+  constructor(
+    private briefingService: DailyBriefingService,
+    private contextState: ContextStateService
+  ) {}
 
-  @Post('generate')
-  async triggerBriefing(@Req() req: Request) {
-    return this.briefingService.generateBriefing(req['user_id']);
+  @Post('briefing')
+  async generate(@Req() req: any) {
+    return this.briefingService.generateBriefing(req.user.id);
+  }
+
+  @Get('context')
+  async getContext(@Req() req: any) {
+    return this.contextState.getContextState(req.user.id);
   }
 }
